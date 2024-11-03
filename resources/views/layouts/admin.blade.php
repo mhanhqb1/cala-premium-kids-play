@@ -44,12 +44,27 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         <li class="nav-item">
-                            <a href="{{ route('admin.products.index') }}" class="nav-link">
+                            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ Request::is('admin/dashboard') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        <!-- Quản lý danh mục -->
+                        <li class="nav-item">
+                            <a href="{{ route('admin.categories.index') }}" class="nav-link {{ Request::is('admin/categories*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-list"></i>
+                                <p>Quản lý danh mục</p>
+                            </a>
+                        </li>
+
+                        <!-- Quản lý sản phẩm -->
+                        <li class="nav-item">
+                            <a href="{{ route('admin.products.index') }}" class="nav-link {{ Request::is('admin/products*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-box"></i>
                                 <p>Quản lý sản phẩm</p>
                             </a>
                         </li>
-                        <!-- Thêm các liên kết khác -->
                     </ul>
                 </nav>
             </div>
