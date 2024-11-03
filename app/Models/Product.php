@@ -30,4 +30,13 @@ class Product extends Model
     {
         return $this->hasMany(Discount::class);
     }
+
+    public function getFormattedPriceAttribute()
+    {
+        return number_format($this->price, 0, ',', '.') . ' đ';
+    }
+    public function getFormattedStockAttribute()
+    {
+        return number_format($this->stock);
+    }
 }
