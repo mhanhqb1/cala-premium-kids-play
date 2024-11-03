@@ -15,16 +15,24 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>Hình ảnh</th>
                     <th>Tên sản phẩm</th>
                     <th>Giá</th>
                     <th>Tồn kho</th>
                     <th>Danh mục</th>
-                    <th>Hành động</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($products as $product)
                     <tr>
+                        <td>
+                        @if($product->images->where('is_primary', true)->first())
+                            <img src="{{ asset('storage/' . $product->images->where('is_primary', true)->first()->image_url) }}" alt="{{ $product->name }}" style="width: 100px; height: auto;">
+                        @else
+                            <span>Không có hình ảnh</span>
+                        @endif
+                        </td>
                         <td>{{ $product->name }}</td>
                         <td>{{ $product->formatted_price }}</td>
                         <td>{{ $product->formatted_stock }}</td>

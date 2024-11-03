@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Constants\ConstantCommon;
+use App\Constants\ConstantProduct;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
@@ -29,7 +30,7 @@ class ProductController extends Controller
         }
 
         // Lấy danh sách sản phẩm
-        $products = $query->with('categories')->paginate($pageLimit);
+        $products = $query->with(['categories', 'images'])->paginate($pageLimit);
         $categories = Category::all();
         return view('admin.products.index', compact(
             'products',
@@ -54,12 +55,22 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'category_ids' => 'array', // Danh sách ID của categories
             'category_ids.*' => 'exists:categories,id',
+            'images.*' => 'nullable|image|mimes:'.ConstantProduct::IMAGE_TYPES.'|max:'.ConstantProduct::IMAGE_LENGTH,
         ]);
 
         $product = Product::create($request->only(['name', 'price', 'description', 'stock']));
 
         // Gán danh mục cho sản phẩm
         $product->categories()->sync($request->category_ids);
+
+        // Xử lý upload hình ảnh
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $image) {
+                $imagePath = $image->store('images/products', 'public');
+                $isPrimary = $index === 0; // Đặt hình ảnh đầu tiên là hình ảnh chính
+                $product->images()->create(['image_url' => $imagePath, 'is_primary' => $isPrimary]);
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công!');
     }
@@ -81,12 +92,30 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
             'category_ids' => 'array', // Danh sách ID của categories
             'category_ids.*' => 'exists:categories,id',
+            'images.*' => 'nullable|image|mimes:'.ConstantProduct::IMAGE_TYPES.'|max:'.ConstantProduct::IMAGE_LENGTH,
         ]);
 
         $product->update($request->only(['name', 'price', 'description', 'stock']));
 
         // Cập nhật danh mục cho sản phẩm
         $product->categories()->sync($request->category_ids);
+
+        // Xử lý upload hình ảnh
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $imagePath = $image->store(ConstantProduct::IMAGE_PATH, 'public');
+                $product->images()->create(['image_url' => $imagePath]);
+            }
+        }
+
+        // Xử lý hình ảnh chính
+        if ($request->has('primary_image')) {
+            $product->images()->update(['is_primary' => false]); // Đặt tất cả hình ảnh không phải chính
+            $primaryImage = $product->images()->find($request->primary_image);
+            if ($primaryImage) {
+                $primaryImage->update(['is_primary' => true]);
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được cập nhật!');
     }
