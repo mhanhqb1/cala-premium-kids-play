@@ -18,6 +18,7 @@
                     <th>Tên sản phẩm</th>
                     <th>Giá</th>
                     <th>Tồn kho</th>
+                    <th>Danh mục</th>
                     <th>Hành động</th>
                 </tr>
             </thead>
@@ -27,6 +28,11 @@
                         <td>{{ $product->name }}</td>
                         <td>{{ $product->formatted_price }}</td>
                         <td>{{ $product->formatted_stock }}</td>
+                        <td>
+                            @foreach($product->categories as $category)
+                                <span class="badge badge-primary">{{ $category->name }}</span>
+                            @endforeach
+                        </td>
                         <td>
                             <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-warning">Sửa</a>
                             <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" style="display:inline;">

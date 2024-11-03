@@ -2,23 +2,46 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Constants\ConstantCommon;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     // Danh sách sản phẩm
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
-        return view('admin.products.index', compact('products'));
+        $pageLimit = ConstantCommon::PAGE_LIMIT;
+        $query = Product::query();
+
+        // Lọc theo tên sản phẩm
+        if ($request->has('search') && $request->search !== '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Lọc theo danh mục
+        if ($request->has('category_id') && $request->category_id !== '') {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('categories.id', $request->category_id);
+            });
+        }
+
+        // Lấy danh sách sản phẩm
+        $products = $query->with('categories')->paginate($pageLimit);
+        $categories = Category::all();
+        return view('admin.products.index', compact(
+            'products',
+            'categories'
+        ));
     }
 
     // Hiển thị form thêm sản phẩm
     public function create()
     {
-        return view('admin.products.create');
+        $categories = Category::all();
+        return view('admin.products.create', compact('categories'));
     }
 
     // Lưu sản phẩm mới
@@ -29,9 +52,14 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|integer',
             'stock' => 'required|integer|min:0',
+            'category_ids' => 'array', // Danh sách ID của categories
+            'category_ids.*' => 'exists:categories,id',
         ]);
 
-        Product::create($validatedData);
+        $product = Product::create($request->only(['name', 'price', 'description', 'stock']));
+
+        // Gán danh mục cho sản phẩm
+        $product->categories()->sync($request->category_ids);
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được thêm thành công!');
     }
@@ -39,7 +67,8 @@ class ProductController extends Controller
     // Hiển thị form chỉnh sửa sản phẩm
     public function edit(Product $product)
     {
-        return view('admin.products.edit', compact('product'));
+        $categories = Category::all();
+        return view('admin.products.edit', compact('product', 'categories'));
     }
 
     // Cập nhật sản phẩm
@@ -50,9 +79,14 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|integer',
             'stock' => 'required|integer|min:0',
+            'category_ids' => 'array', // Danh sách ID của categories
+            'category_ids.*' => 'exists:categories,id',
         ]);
 
-        $product->update($validatedData);
+        $product->update($request->only(['name', 'price', 'description', 'stock']));
+
+        // Cập nhật danh mục cho sản phẩm
+        $product->categories()->sync($request->category_ids);
 
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được cập nhật!');
     }
