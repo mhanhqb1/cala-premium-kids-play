@@ -7,7 +7,7 @@
     <div class="card-header">
         <h3 class="card-title">Thêm sản phẩm</h3>
     </div>
-    <form action="{{ route('admin.products.store') }}" method="POST">
+    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="card-body">
             <div class="form-group">
@@ -24,6 +24,10 @@
                         </option>
                     @endforeach
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="images">Hình ảnh sản phẩm</label>
+                <input type="file" name="images[]" class="form-control" id="images" accept="image/*" multiple>
             </div>
             <div class="form-group">
                 <label for="description">Mô tả</label>
