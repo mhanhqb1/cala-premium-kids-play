@@ -15,6 +15,17 @@
                 <input type="text" id="name" name="name" class="form-control" placeholder="Nhập tên sản phẩm" required>
             </div>
             <div class="form-group">
+                <label for="category_ids">Danh mục sản phẩm</label>
+                <select name="category_ids[]" id="category_ids" class="form-control select2" multiple>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}"
+                            {{ isset($product) && $product->categories->contains($category->id) ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="description">Mô tả</label>
                 <textarea id="description" name="description" class="form-control" rows="3" placeholder="Nhập mô tả sản phẩm"></textarea>
             </div>
