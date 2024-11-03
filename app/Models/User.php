@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->role === UserRole::ADMIN->value;
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }
