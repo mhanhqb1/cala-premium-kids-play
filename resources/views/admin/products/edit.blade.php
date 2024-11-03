@@ -52,6 +52,11 @@
                 <input type="file" name="images[]" class="form-control" id="images" accept="image/*" multiple>
             </div>
             <div class="form-group">
+                <div id="preview-images" class="preview-images" style="display: flex; flex-wrap: wrap;">
+                    <!-- Hình ảnh sẽ hiển thị ở đây -->
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="description">Mô tả</label>
                 <textarea id="description" name="description" class="form-control" rows="3">{{ $product->description }}</textarea>
             </div>
@@ -97,6 +102,31 @@ $(document).ready(function() {
                 }
             });
         }
+    });
+
+    $('#images').on('change', function(event) {
+        const previewContainer = $('#preview-images');
+        previewContainer.empty(); // Xóa hình ảnh cũ
+
+        const files = event.target.files;
+
+        $.each(files, function(index, file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const img = $('<img>', {
+                    src: e.target.result,
+                    css: {
+                        width: '100px', // Đặt kích thước cho hình ảnh
+                        height: 'auto',
+                        marginRight: '10px'
+                    }
+                });
+                previewContainer.append(img);
+            };
+
+            reader.readAsDataURL(file);
+        });
     });
 });
 </script>
