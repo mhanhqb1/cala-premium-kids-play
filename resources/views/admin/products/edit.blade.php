@@ -32,11 +32,17 @@
                     @foreach($product->images as $image)
                         <div class="image-container" style="display: inline-block; margin-right: 10px; position: relative;">
                             <img src="{{ asset('storage/' . $image->image_url) }}" alt="{{ $product->name }}" style="width: 100px; height: auto;">
-                            <form action="{{ route('admin.products.images.destroy', $image->id) }}" method="POST" style="position: absolute; top: 0; right: 0;">
+                            <!-- <form action="{{ route('admin.products.images.destroy', $image->id) }}" method="POST" style="position: absolute; top: 0; right: 0;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm" style="background: none; border: none; color: red; cursor: pointer;" onclick="return confirm('Bạn có chắc chắn muốn xóa hình ảnh này?')">&times;</button>
-                            </form>
+                            </form> -->
+                            <div>
+                                <label>
+                                    <input type="radio" name="primary_image" value="{{ $image->id }}" {{ $image->is_primary ? 'checked' : '' }}>
+                                    Chọn làm hình chính
+                                </label>
+                            </div>
                         </div>
                     @endforeach
                     @if($product->images->isEmpty())

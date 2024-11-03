@@ -65,9 +65,10 @@ class ProductController extends Controller
 
         // Xử lý upload hình ảnh
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $imagePath = $image->store(ConstantProduct::IMAGE_PATH, 'public');
-                $product->images()->create(['image_url' => $imagePath]);
+            foreach ($request->file('images') as $index => $image) {
+                $imagePath = $image->store('images/products', 'public');
+                $isPrimary = $index === 0; // Đặt hình ảnh đầu tiên là hình ảnh chính
+                $product->images()->create(['image_url' => $imagePath, 'is_primary' => $isPrimary]);
             }
         }
 
@@ -104,6 +105,15 @@ class ProductController extends Controller
             foreach ($request->file('images') as $image) {
                 $imagePath = $image->store(ConstantProduct::IMAGE_PATH, 'public');
                 $product->images()->create(['image_url' => $imagePath]);
+            }
+        }
+
+        // Xử lý hình ảnh chính
+        if ($request->has('primary_image')) {
+            $product->images()->update(['is_primary' => false]); // Đặt tất cả hình ảnh không phải chính
+            $primaryImage = $product->images()->find($request->primary_image);
+            if ($primaryImage) {
+                $primaryImage->update(['is_primary' => true]);
             }
         }
 
