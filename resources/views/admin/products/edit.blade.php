@@ -32,11 +32,8 @@
                     @foreach($product->images as $image)
                         <div class="image-container" style="display: inline-block; margin-right: 10px; position: relative;">
                             <img src="{{ asset('storage/' . $image->image_url) }}" alt="{{ $product->name }}" style="width: 100px; height: auto;">
-                            <!-- <form action="{{ route('admin.products.images.destroy', $image->id) }}" method="POST" style="position: absolute; top: 0; right: 0;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" style="background: none; border: none; color: red; cursor: pointer;" onclick="return confirm('Bạn có chắc chắn muốn xóa hình ảnh này?')">&times;</button>
-                            </form> -->
+                            <span class="btn btn-danger btn-sm delete-image-form" data-action="{{ route('admin.products.images.destroy', $image->id) }}" style="background: none; border: none; color: red; cursor: pointer;">&times;</span>
+
                             <div>
                                 <label>
                                     <input type="radio" name="primary_image" value="{{ $image->id }}" {{ $image->is_primary ? 'checked' : '' }}>
@@ -74,3 +71,33 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    $('.delete-image-form').on('click', function(e) {
+        e.preventDefault(); // Ngăn chặn submit form mặc định
+        const $this = $(this);
+        const actionUrl = $this.attr('data-action');
+
+        if (confirm('Bạn có chắc chắn muốn xóa hình ảnh này?')) {
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: {
+                    _method: 'DELETE',
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    // Xóa hình ảnh từ DOM
+                    $this.closest('.image-container').remove();
+                },
+                error: function(xhr) {
+                    alert('Có lỗi xảy ra!'); // Thông báo lỗi
+                }
+            });
+        }
+    });
+});
+</script>
+@endPush
