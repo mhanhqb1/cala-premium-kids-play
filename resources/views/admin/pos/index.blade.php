@@ -9,20 +9,38 @@
     @endif
 
     <div class="row">
-        <!-- Danh sách sản phẩm -->
         <div class="col-md-8">
-            <h2>Sản phẩm</h2>
-            <div class="product-list d-flex flex-wrap">
-                @foreach($products as $product)
-                    <div class="product-item card m-2 p-2" style="width: 150px;">
-                        <img src="{{ asset('storage/' . $product->images->first()->image_url) }}" alt="{{ $product->name }}" class="card-img-top" style="height: 100px; object-fit: cover;">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $product->name }}</h5>
-                            <p class="card-text">{{ $product->formatted_price }}</p>
-                            <button class="btn btn-primary btn-sm add-to-cart" data-id="{{ $product->id }}">Thêm vào giỏ</button>
-                        </div>
-                    </div>
-                @endforeach
+            <!-- Form tìm kiếm và lọc sản phẩm -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <input type="text" id="searchProduct" class="form-control" placeholder="Tìm kiếm sản phẩm">
+                </div>
+                <div class="col-md-4">
+                    <select id="filterCategory" class="form-control">
+                        <option value="">Tất cả danh mục</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary" id="searchButton">Tìm kiếm</button>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col">
+                    <button class="btn btn-secondary category-button" data-category-id="">Tất cả</button>
+                    @foreach($categories as $category)
+                        <button class="btn btn-secondary category-button" data-category-id="{{ $category->id }}">
+                            {{ $category->name }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div id="productList" class="row">
+                @include('admin.pos.partials.product_list', ['products' => $products])
             </div>
         </div>
 
@@ -44,6 +62,44 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    let categoryId = '';
+    $('#searchButton').on('click', function() {
+        fetchFilteredProducts();
+    });
+
+    $('#searchProduct').on('change', function() {
+        fetchFilteredProducts();
+    });
+
+    $('.category-button').on('click', function() {
+        // Xóa active từ các nút khác và thêm vào nút được chọn
+        $('.category-button').removeClass('btn-primary').addClass('btn-secondary');
+        $(this).removeClass('btn-secondary').addClass('btn-primary');
+
+        // Lấy ID của danh mục từ nút được chọn
+        categoryId = $(this).data('category-id');
+        fetchFilteredProducts();
+    });
+
+    function fetchFilteredProducts() {
+        let search = $('#searchProduct').val();
+
+        $.ajax({
+            url: "{{ route('admin.pos.searchProducts') }}",
+            type: "GET",
+            data: {
+                search: search,
+                category: categoryId
+            },
+            success: function(data) {
+                $('#productList').html(data.html); // Cập nhật danh sách sản phẩm
+            },
+            error: function() {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    }
+
     // Thêm sản phẩm vào giỏ hàng
     $('.add-to-cart').on('click', function() {
         let productId = $(this).data('id');
@@ -66,6 +122,7 @@ $(document).ready(function() {
             if (data.success) {
                 alert('Thanh toán thành công!');
                 $('#cart').html(''); // Xóa giỏ hàng sau khi thanh toán
+                window.location.reload();
             } else {
                 alert('Có lỗi xảy ra, vui lòng thử lại.');
             }

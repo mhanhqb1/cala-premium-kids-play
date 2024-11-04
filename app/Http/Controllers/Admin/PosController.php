@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
@@ -13,7 +14,32 @@ class PosController extends Controller
     public function index()
     {
         $products = Product::with('images')->get();
-        return view('admin.pos.index', compact('products'));
+        $categories = Category::all();
+        return view('admin.pos.index', compact('products', 'categories'));
+    }
+
+    public function searchProducts(Request $request)
+    {
+        $query = Product::query();
+
+        // Lọc theo tên sản phẩm
+        if ($request->has('search') && $request->search != '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Lọc theo danh mục
+        if ($request->has('category') && $request->category != '') {
+            $query->whereHas('categories', function($q) use ($request) {
+                $q->where('categories.id', $request->category);
+            });
+        }
+
+        $products = $query->get();
+
+        // Trả về HTML của danh sách sản phẩm đã lọc
+        return response()->json([
+            'html' => view('admin.pos.partials.product_list', compact('products'))->render()
+        ]);
     }
 
     public function addToCart(Request $request)
@@ -53,6 +79,13 @@ class PosController extends Controller
         $cart = session()->get('cart');
 
         // Logic lưu đơn hàng vào database...
+        $order = new Order();
+        $order->status = OrderStatus::COMPLETED;
+        $order->user_id = 1;
+        $order->total_amount = array_sum(array_map(function($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+        $order->save();
 
         session()->forget('cart'); // Xóa giỏ hàng sau khi thanh toán
 
