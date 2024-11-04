@@ -2,12 +2,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
 
 class PosController extends Controller
 {
@@ -15,7 +17,9 @@ class PosController extends Controller
     {
         $products = Product::with('images')->get();
         $categories = Category::all();
-        return view('admin.pos.index', compact('products', 'categories'));
+        $users = User::where('role', UserRole::USER)->get();
+        $guest = User::where('role', UserRole::GUEST)->first();
+        return view('admin.pos.index', compact('products', 'categories', 'users', 'guest'));
     }
 
     public function searchProducts(Request $request)
@@ -75,13 +79,14 @@ class PosController extends Controller
 
     public function checkout(Request $request)
     {
+        $userId = $request->get('user_id');
         // Tạo đơn hàng và lưu vào database
         $cart = session()->get('cart');
 
         // Logic lưu đơn hàng vào database...
         $order = new Order();
         $order->status = OrderStatus::COMPLETED;
-        $order->user_id = 1;
+        $order->user_id = $userId;
         $order->total_amount = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
         }, $cart));
@@ -94,6 +99,7 @@ class PosController extends Controller
 
     public function holdOrder(Request $request)
     {
+        $userId = $request->get('user_id');
         // Lấy giỏ hàng từ session
         $cart = session()->get('cart');
 
@@ -104,7 +110,7 @@ class PosController extends Controller
         // Tạo đơn hàng và lưu vào database với trạng thái "hold"
         $order = new Order();
         $order->status = OrderStatus::HOLD;
-        $order->user_id = 1;
+        $order->user_id = $userId;
         $order->total_amount = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
         }, $cart));

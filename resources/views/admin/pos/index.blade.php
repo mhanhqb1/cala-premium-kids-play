@@ -16,10 +16,10 @@
                     <input type="text" id="searchProduct" class="form-control" placeholder="Tìm kiếm sản phẩm">
                 </div>
                 <div class="col-md-4">
-                    <select id="filterCategory" class="form-control">
-                        <option value="">Tất cả danh mục</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    <select id="customerSelect" class="form-control select2">
+                        <option value="{{ $guest->id }}">Khách vãng lai</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -63,8 +63,13 @@
 <script>
 $(document).ready(function() {
     let categoryId = '';
+    let customerId = '{{ $guest->id }}';
     $('#searchButton').on('click', function() {
         fetchFilteredProducts();
+    });
+
+    $('#customerSelect').on('change', function() {
+        customerId = $(this).val();
     });
 
     $('#searchProduct').on('change', function() {
@@ -118,7 +123,7 @@ $(document).ready(function() {
 
     // Thanh toán
     $('#checkout').on('click', function() {
-        $.post("{{ route('admin.pos.checkout') }}", { _token: "{{ csrf_token() }}" }, function(data) {
+        $.post("{{ route('admin.pos.checkout') }}?user_id="+customerId, { _token: "{{ csrf_token() }}" }, function(data) {
             if (data.success) {
                 alert('Thanh toán thành công!');
                 $('#cart').html(''); // Xóa giỏ hàng sau khi thanh toán
@@ -130,10 +135,11 @@ $(document).ready(function() {
     });
 
     $('#hold-order').on('click', function() {
-        $.post("{{ route('admin.pos.holdOrder') }}", { _token: "{{ csrf_token() }}" }, function(data) {
+        $.post("{{ route('admin.pos.holdOrder') }}?user_id="+customerId, { _token: "{{ csrf_token() }}" }, function(data) {
             if (data.success) {
                 alert(data.message);
                 $('#cart').html(''); // Xóa giỏ hàng sau khi tạm giữ
+                window.location.reload();
             } else {
                 alert('Có lỗi xảy ra, vui lòng thử lại.');
             }
