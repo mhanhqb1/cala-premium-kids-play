@@ -50,6 +50,22 @@
             <div id="cart">
                 <!-- Hiển thị giỏ hàng với các sản phẩm đã chọn -->
             </div>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="subTotal">Tổng phụ:</label>
+                        <input type="text" id="subTotal" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="discount">Giảm giá (%):</label>
+                        <input type="number" id="discount" class="form-control" value="0" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="total">Tổng cộng:</label>
+                        <input type="text" id="total" class="form-control" readonly>
+                    </div>
+                </div>
+            </div>
             <div class="mt-3">
                 <button class="btn btn-warning" id="hold-order">Tạm giữ đơn hàng</button>
                 <button class="btn btn-success" id="checkout">Thanh toán</button>
@@ -64,6 +80,8 @@
 $(document).ready(function() {
     let categoryId = '';
     let customerId = '{{ $guest->id }}';
+    let cart = [];
+
     $('#searchButton').on('click', function() {
         fetchFilteredProducts();
     });
@@ -108,9 +126,23 @@ $(document).ready(function() {
     // Thêm sản phẩm vào giỏ hàng
     $('.add-to-cart').on('click', function() {
         let productId = $(this).data('id');
+        let productPrice = $(this).data('price');
         $.post("{{ route('admin.pos.addToCart') }}", { id: productId, _token: "{{ csrf_token() }}" }, function(data) {
             $('#cart').html(data.cartHtml);
         });
+        let product = cart.find(item => item.id === productId);
+        if (product) {
+            // Nếu có rồi thì tăng số lượng
+            product.quantity += 1;
+        } else {
+            // Nếu chưa thì thêm sản phẩm mới
+            cart.push({
+                id: productId,
+                price: productPrice,
+                quantity: 1
+            });
+        }
+        updateTotals();
     });
 
     // Xóa sản phẩm khỏi giỏ hàng
@@ -119,6 +151,8 @@ $(document).ready(function() {
         $.post("{{ route('admin.pos.removeFromCart') }}", { id: productId, _token: "{{ csrf_token() }}" }, function(data) {
             $('#cart').html(data.cartHtml);
         });
+        cart = cart.filter(item => item.id !== productId);
+        updateTotals();
     });
 
     // Thanh toán
@@ -145,6 +179,30 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#discount').on('input', function() {
+        updateTotals();
+    });
+
+    // Cập nhật tổng phụ và tổng cộng
+    function updateTotals() {
+        let subTotal = 0;
+
+        // Tính tổng phụ dựa trên các sản phẩm trong giỏ hàng
+        cart.forEach(item => {
+            subTotal += item.price * item.quantity;
+        });
+
+        // Hiển thị tổng phụ
+        $('#subTotal').val(subTotal.toLocaleString() + ' VND');
+
+        // Áp dụng giảm giá
+        let discount = parseFloat($('#discount').val()) || 0;
+        let total = subTotal - (subTotal * (discount / 100));
+
+        // Hiển thị tổng cộng
+        $('#total').val(total.toLocaleString() + ' VND');
+    }
 });
 </script>
 @endPush

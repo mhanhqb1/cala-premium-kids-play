@@ -5,7 +5,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{ $product->name }}</h5>
                 <p class="card-text">{{ number_format($product->price) }} VND</p>
-                <button class="btn btn-primary btn-sm add-to-cart" data-id="{{ $product->id }}">Thêm vào giỏ</button>
+                <button class="btn btn-primary btn-sm add-to-cart" data-id="{{ $product->id }}" data-price="{{ $product->price }}">Thêm vào giỏ</button>
             </div>
         </div>
     </div>
