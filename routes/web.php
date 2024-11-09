@@ -50,6 +50,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/pos/hold-orders', [PosController::class, 'showHoldOrders'])->name('pos.holdOrders');
     Route::get('/pos/resume-order/{order}', [PosController::class, 'resumeOrder'])->name('pos.resumeOrder');
     Route::get('/pos/search-products', [PosController::class, 'searchProducts'])->name('pos.searchProducts');
+    Route::post('/pos/create-customer', [PosController::class, 'createCustomer'])->name('pos.createCustomer');
+
 
 });
 

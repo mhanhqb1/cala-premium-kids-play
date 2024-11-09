@@ -19,12 +19,14 @@
                     <select id="customerSelect" class="form-control select2">
                         <option value="{{ $guest->id }}">Khách vãng lai</option>
                         @foreach($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            <option value="{{ $user->id }}">{{ $user->name }}-{{ $user->phone }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <button class="btn btn-primary" id="searchButton">Tìm kiếm</button>
+                    <button id="createCustomerBtn" class="btn btn-primary" data-toggle="modal" data-target="#createCustomerModal">
+                        Tạo mới khách hàng
+                    </button>
                 </div>
             </div>
             <div class="row mb-4">
@@ -72,6 +74,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal tạo mới khách hàng -->
+    <div class="modal fade" id="createCustomerModal" tabindex="-1" role="dialog" aria-labelledby="createCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createCustomerModalLabel">Tạo Mới Khách Hàng</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createCustomerForm">
+                        @csrf
+                        <div class="form-group">
+                            <label for="customerName">Tên khách hàng</label>
+                            <input type="text" id="customerName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerPhone">Số điện thoại</label>
+                            <input type="text" id="customerPhone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerEmail">Email</label>
+                            <input type="email" id="customerEmail" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-success">Tạo khách hàng</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -90,7 +124,7 @@ $(document).ready(function() {
         customerId = $(this).val();
     });
 
-    $('#searchProduct').on('change', function() {
+    $('#searchProduct').on('input', function() {
         fetchFilteredProducts();
     });
 
@@ -102,6 +136,45 @@ $(document).ready(function() {
         // Lấy ID của danh mục từ nút được chọn
         categoryId = $(this).data('category-id');
         fetchFilteredProducts();
+    });
+
+    // Mở modal khi nhấn nút "Tạo mới khách hàng"
+    $('#createCustomerBtn').on('click', function() {
+        $('#createCustomerModal').modal('show');
+    });
+
+    // Xử lý submit form tạo khách hàng mới
+    $('#createCustomerForm').on('submit', function(e) {
+        e.preventDefault();
+
+        let name = $('#customerName').val();
+        let phone = $('#customerPhone').val();
+        let email = $('#customerEmail').val();
+
+        $.ajax({
+            url: "{{ route('admin.pos.createCustomer') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                name: name,
+                phone: phone,
+                email: email
+            },
+            success: function(response) {
+                // Đóng modal và reset form
+                $('#createCustomerModal').modal('hide');
+                $('#createCustomerForm')[0].reset();
+
+                // Thêm khách hàng mới vào dropdown
+                $('#customerSelect').append(`<option value="${response.customer.id}">${response.customer.name} - ${response.customer.phone}</option>`);
+
+                // Chọn khách hàng mới tạo
+                $('#customerSelect').val(response.customer.id);
+            },
+            error: function() {
+                alert('Đã xảy ra lỗi, vui lòng thử lại!');
+            }
+        });
     });
 
     function fetchFilteredProducts() {

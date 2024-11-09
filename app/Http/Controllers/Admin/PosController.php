@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class PosController extends Controller
 {
@@ -152,6 +153,18 @@ class PosController extends Controller
         session()->put('cart', $cart); // Lưu giỏ hàng vào session
 
         return redirect()->route('admin.pos.index')->with('message', 'Đã tiếp tục xử lý đơn hàng.');
+    }
+
+    public function createCustomer(Request $request)
+    {
+        $customer = User::create([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'password' => Hash::make(config('app.default_pass')),
+        ]);
+
+        return response()->json(['customer' => $customer]);
     }
 
 }

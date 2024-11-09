@@ -185,4 +185,6 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    'default_pass' => env('DEFAULT_PASS', '12345678'),
+
 ];
