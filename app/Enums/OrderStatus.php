@@ -8,6 +8,7 @@ enum OrderStatus: int
     case COMPLETED = 1;
     case CANCELLED = -1;
     case HOLD = 2;
+    case POS_HOLD = 3;
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum OrderStatus: int
             self::COMPLETED => 'Completed',
             self::CANCELLED => 'Cancelled',
             self::HOLD => 'Hold',
+            self::POS_HOLD => 'POS Hold',
         };
     }
 }

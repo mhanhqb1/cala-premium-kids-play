@@ -20,8 +20,7 @@ class PosController extends Controller
         $categories = Category::all();
         $users = User::where('role', UserRole::USER)->get();
         $guest = User::where('role', UserRole::GUEST)->first();
-        $cart = session()->get('cart');
-        return view('admin.pos.index', compact('products', 'categories', 'users', 'guest', 'cart'));
+        return view('admin.pos.index', compact('products', 'categories', 'users', 'guest'));
     }
 
     public function searchProducts(Request $request)
@@ -111,7 +110,7 @@ class PosController extends Controller
 
         // Tạo đơn hàng và lưu vào database với trạng thái "hold"
         $order = new Order();
-        $order->status = OrderStatus::HOLD;
+        $order->status = OrderStatus::POS_HOLD;
         $order->user_id = $userId;
         $order->total_amount = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
@@ -136,7 +135,7 @@ class PosController extends Controller
 
     public function showHoldOrders()
     {
-        $holdOrders = Order::where('status', OrderStatus::HOLD)->get();
+        $holdOrders = Order::where('status', OrderStatus::POS_HOLD)->get();
         return view('admin.pos.hold_orders', compact('holdOrders'));
     }
 
@@ -153,7 +152,7 @@ class PosController extends Controller
         }
         session()->put('cart', $cart); // Lưu giỏ hàng vào session
 
-        return redirect()->route('admin.pos.index', ['order_id' => $order->id])->with('message', 'Đã tiếp tục xử lý đơn hàng.');
+        return redirect()->route('admin.pos.index')->with('message', 'Đã tiếp tục xử lý đơn hàng.');
     }
 
     public function createCustomer(Request $request)
@@ -171,7 +170,7 @@ class PosController extends Controller
     public function getOnHoldOrders()
     {
         $data = [];
-        $onHoldOrders = Order::where('status', OrderStatus::HOLD)
+        $onHoldOrders = Order::where('status', OrderStatus::POS_HOLD)
             ->get();
         foreach ($onHoldOrders as $order) {
             $data[] = [
@@ -182,6 +181,14 @@ class PosController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    public function deleteOnHoldOrder(Request $request)
+    {
+        $orderId = $request->input('order_id');
+        Order::where('id', $orderId)->delete();
+
+        return response()->json(['status' => 'success']);
     }
 
 }

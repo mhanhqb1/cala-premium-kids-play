@@ -324,6 +324,25 @@ $(document).ready(function() {
         $('#total').val(total.toLocaleString() + ' VND');
     }
 
+    function deleteOnHoldOrder(orderId) {
+        if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) return;
+
+        $.ajax({
+            url: '{{ route("admin.pos.orders.deleteOnHold") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                order_id: orderId
+            },
+            success: function() {
+                loadOnHoldOrders(); // Tải lại danh sách đơn hàng tạm giữ
+            },
+            error: function() {
+                alert('Không thể xóa đơn hàng khỏi danh sách tạm giữ.');
+            }
+        });
+    }
+
     function loadOnHoldOrders() {
         $.ajax({
             url: '{{ route("admin.pos.orders.onHold") }}',
@@ -336,8 +355,29 @@ $(document).ready(function() {
                     $('#onHoldOrderList').append(`
                         <li class="list-group-item">
                             <a href="${order.resume_url}">Đơn hàng #${order.id} - ${order.created_at}</a>
+                            <span class="btn btn-danger btn-sm deleteOnHoldOrder" data-id="${order.id}">
+                                Xóa
+                            </span>
                         </li>
                     `);
+                    $('.deleteOnHoldOrder').on('click', function() {
+                        if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) return;
+                        const orderId = $(this).attr('data-id');
+                        $.ajax({
+                            url: '{{ route("admin.pos.orders.deleteOnHold") }}',
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                order_id: orderId
+                            },
+                            success: function() {
+                                loadOnHoldOrders(); // Tải lại danh sách đơn hàng tạm giữ
+                            },
+                            error: function() {
+                                alert('Không thể xóa đơn hàng khỏi danh sách tạm giữ.');
+                            }
+                        });
+                    });
                 });
             },
             error: function() {

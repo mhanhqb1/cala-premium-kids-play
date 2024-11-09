@@ -52,7 +52,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/pos/search-products', [PosController::class, 'searchProducts'])->name('pos.searchProducts');
     Route::post('/pos/create-customer', [PosController::class, 'createCustomer'])->name('pos.createCustomer');
     Route::get('/pos/orders/on-hold', [PosController::class, 'getOnHoldOrders'])->name('pos.orders.onHold');
-
+    Route::post('/pos/orders/delete-on-hold', [PosController::class, 'deleteOnHoldOrder'])->name('pos.orders.deleteOnHold');
 
 
 });
