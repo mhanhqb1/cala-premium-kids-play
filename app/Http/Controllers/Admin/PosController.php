@@ -20,7 +20,8 @@ class PosController extends Controller
         $categories = Category::all();
         $users = User::where('role', UserRole::USER)->get();
         $guest = User::where('role', UserRole::GUEST)->first();
-        return view('admin.pos.index', compact('products', 'categories', 'users', 'guest'));
+        $cart = session()->get('cart');
+        return view('admin.pos.index', compact('products', 'categories', 'users', 'guest', 'cart'));
     }
 
     public function searchProducts(Request $request)
@@ -146,13 +147,13 @@ class PosController extends Controller
         foreach ($order->items as $item) {
             $cart[$item->product_id] = [
                 "name" => $item->product->name,
-                "price" => $item->price,
+                "price" => $item->unit_price,
                 "quantity" => $item->quantity
             ];
         }
         session()->put('cart', $cart); // Lưu giỏ hàng vào session
 
-        return redirect()->route('admin.pos.index')->with('message', 'Đã tiếp tục xử lý đơn hàng.');
+        return redirect()->route('admin.pos.index', ['order_id' => $order->id])->with('message', 'Đã tiếp tục xử lý đơn hàng.');
     }
 
     public function createCustomer(Request $request)
@@ -165,6 +166,22 @@ class PosController extends Controller
         ]);
 
         return response()->json(['customer' => $customer]);
+    }
+
+    public function getOnHoldOrders()
+    {
+        $data = [];
+        $onHoldOrders = Order::where('status', OrderStatus::HOLD)
+            ->get();
+        foreach ($onHoldOrders as $order) {
+            $data[] = [
+                'id' => $order->id,
+                'created_at' => date('Y-m-d', strtotime($order->created_at)),
+                'resume_url' => route('admin.pos.resumeOrder', $order),
+            ];
+        }
+
+        return response()->json($data);
     }
 
 }

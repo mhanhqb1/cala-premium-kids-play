@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container">
+<div class="pos-menu">
+    <button id="onHoldOrdersButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#onHoldOrdersModal">
+        Đơn hàng tạm giữ (<span id="onHoldOrderCount">0</span>)
+    </button>
+</div>
+<div class="container-fluid">
     <h1>POS - Bán Hàng</h1>
 
     @if(session('message'))
@@ -50,7 +55,11 @@
         <div class="col-md-4">
             <h2>Giỏ hàng</h2>
             <div id="cart">
-                <!-- Hiển thị giỏ hàng với các sản phẩm đã chọn -->
+
+                    <!-- Hiển thị giỏ hàng với các sản phẩm đã chọn -->
+                    @include('admin.pos.cart')
+                    </tbody>
+                </table>
             </div>
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -71,6 +80,27 @@
             <div class="mt-3">
                 <button class="btn btn-warning" id="hold-order">Tạm giữ đơn hàng</button>
                 <button class="btn btn-success" id="checkout">Thanh toán</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="onHoldOrdersModal" tabindex="-1" aria-labelledby="onHoldOrdersModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="onHoldOrdersModalLabel">Danh sách đơn hàng tạm giữ</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul id="onHoldOrderList" class="list-group">
+                        <!-- Các đơn hàng tạm giữ sẽ được hiển thị ở đây -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
             </div>
         </div>
     </div>
@@ -115,6 +145,23 @@ $(document).ready(function() {
     let categoryId = '';
     let customerId = '{{ $guest->id }}';
     let cart = [];
+
+    @if(session('cart'))
+        @foreach(session('cart') as $id => $item)
+        cart.push({
+            id: {{$id}},
+            price: {{$item['price']}},
+            quantity: {{$item['quantity']}}
+        });
+        @endforeach
+    @endif
+
+    loadOnHoldOrders();
+    updateTotals();
+
+    $('#onHoldOrdersButton').on('click', function(){
+        $('#onHoldOrdersModal').modal();
+    })
 
     $('#searchButton').on('click', function() {
         fetchFilteredProducts();
@@ -275,6 +322,28 @@ $(document).ready(function() {
 
         // Hiển thị tổng cộng
         $('#total').val(total.toLocaleString() + ' VND');
+    }
+
+    function loadOnHoldOrders() {
+        $.ajax({
+            url: '{{ route("admin.pos.orders.onHold") }}',
+            method: 'GET',
+            success: function(orders) {
+                $('#onHoldOrderList').empty();
+                $('#onHoldOrderCount').text(orders.length); // Cập nhật số lượng đơn hàng
+
+                orders.forEach(order => {
+                    $('#onHoldOrderList').append(`
+                        <li class="list-group-item">
+                            <a href="${order.resume_url}">Đơn hàng #${order.id} - ${order.created_at}</a>
+                        </li>
+                    `);
+                });
+            },
+            error: function() {
+                alert('Không thể tải danh sách đơn hàng tạm giữ.');
+            }
+        });
     }
 });
 </script>
