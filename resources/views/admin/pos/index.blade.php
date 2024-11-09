@@ -310,7 +310,13 @@ $(document).ready(function() {
 
     // Thanh toán
     $('#checkout').on('click', function() {
-        $.post("{{ route('admin.pos.checkout') }}?user_id="+customerId, { _token: "{{ csrf_token() }}" }, function(data) {
+        let params = {
+            _token: "{{ csrf_token() }}",
+            user_id: $('#customerSelect').val(),
+            discount: parseFloat($('#discount').val()) || 0,
+            max_discount: parseFloat($('#max_discount').val()) || 0,
+        };
+        $.post("{{ route('admin.pos.checkout') }}", params, function(data) {
             if (data.success) {
                 alert('Thanh toán thành công!');
                 $('#cart').html(''); // Xóa giỏ hàng sau khi thanh toán

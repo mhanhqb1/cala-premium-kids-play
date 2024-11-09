@@ -81,16 +81,30 @@ class PosController extends Controller
     public function checkout(Request $request)
     {
         $userId = $request->get('user_id');
+        $discount = $request->get('discount', 0);
+        $maxDiscount = $request->get('max_discount', 0);
         // Tạo đơn hàng và lưu vào database
         $cart = session()->get('cart');
+
+        $subTotal = array_sum(array_map(function($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+
+        $discountAmount = $subTotal*$discount/100;
+
+        if ($discountAmount > $maxDiscount) {
+            $discountAmount = $maxDiscount;
+        }
 
         // Logic lưu đơn hàng vào database...
         $order = new Order();
         $order->status = OrderStatus::COMPLETED;
         $order->user_id = $userId;
-        $order->total_amount = array_sum(array_map(function($item) {
-            return $item['price'] * $item['quantity'];
-        }, $cart));
+        $order->sub_total = $subTotal;
+        $order->discount = $discount;
+        $order->discount_amount = $discountAmount;
+        $order->max_discount = $maxDiscount;
+        $order->total_amount = $subTotal - $discountAmount;
         $order->save();
 
         session()->forget('cart'); // Xóa giỏ hàng sau khi thanh toán
