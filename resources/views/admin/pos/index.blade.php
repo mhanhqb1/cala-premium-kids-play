@@ -36,7 +36,7 @@
             </div>
             <div class="row mb-4">
                 <div class="col">
-                    <button class="btn btn-secondary category-button" data-category-id="">Tất cả</button>
+                    <button class="btn btn-primary category-button" data-category-id="">Tất cả</button>
                     @foreach($categories as $category)
                         <button class="btn btn-secondary category-button" data-category-id="{{ $category->id }}">
                             {{ $category->name }}
@@ -70,6 +70,14 @@
                     <div class="form-group">
                         <label for="discount">Giảm giá (%):</label>
                         <input type="number" id="discount" class="form-control" value="0" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_discount">Giảm giá tối đa:</label>
+                        <input type="number" id="max_discount" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="discountAmount">Giảm giá áp dụng:</label>
+                        <input type="text" id="discountAmount" class="form-control" readonly>
                     </div>
                     <div class="form-group">
                         <label for="total">Tổng cộng:</label>
@@ -169,6 +177,27 @@ $(document).ready(function() {
 
     $('#customerSelect').on('change', function() {
         customerId = $(this).val();
+        if (customerId) {
+            $.ajax({
+                url: '/admin/pos/user/' + customerId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#discount').val(response.data.discount);
+                        $('#max_discount').val(response.data.max_discount);
+                        updateTotals();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('Không thể lấy thông tin khách hàng.');
+                }
+            });
+        } else {
+            $('#discount').val(0); // Nếu không có user nào được chọn, đặt discount về 0
+            updateTotals();
+        }
     });
 
     $('#searchProduct').on('input', function() {
@@ -318,7 +347,19 @@ $(document).ready(function() {
 
         // Áp dụng giảm giá
         let discount = parseFloat($('#discount').val()) || 0;
-        let total = subTotal - (subTotal * (discount / 100));
+        var maxDiscount = parseFloat($('#max_discount').val()) || 0;
+
+        // Tính mức giảm giá
+        var discountAmount = (subTotal * discount) / 100;
+
+        // Áp dụng giới hạn giảm giá tối đa
+        if (discountAmount > maxDiscount) {
+            discountAmount = maxDiscount;
+        }
+
+        $('#discountAmount').val(discountAmount.toLocaleString() + ' đ');
+
+        let total = subTotal - discountAmount;
 
         // Hiển thị tổng cộng
         $('#total').val(total.toLocaleString() + ' VND');

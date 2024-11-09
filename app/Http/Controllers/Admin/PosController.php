@@ -191,4 +191,22 @@ class PosController extends Controller
         return response()->json(['status' => 'success']);
     }
 
+    public function getUserInfo($userId)
+    {
+        $user = User::find($userId);
+        if ($user) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'discount' => $user->discount,
+                    'max_discount' => $user->max_discount,
+                    'name' => $user->name,
+                    'phone' => $user->phone,
+                ],
+            ]);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'User không tồn tại']);
+    }
+
 }
