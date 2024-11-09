@@ -14,7 +14,9 @@
         @foreach(session('cart') as $id => $details)
         <tr>
             <td>{{ $details['name'] }}</td>
-            <td>{{ $details['quantity'] }}</td>
+            <td>
+                <input type="number" class="form-control item-quantity" data-id="{{ $id }}" value="{{ $details['quantity'] }}" min="1"/>
+            </td>
             <td>{{ number_format($details['price']) }} đ</td>
             <td>{{ number_format($details['quantity'] * $details['price']) }} đ</td>
             <td><span class="btn btn-danger remove-from-cart" data-id="{{ $id }}">Xóa</span></td>

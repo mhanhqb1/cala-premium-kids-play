@@ -209,4 +209,30 @@ class PosController extends Controller
         return response()->json(['status' => 'error', 'message' => 'User không tồn tại']);
     }
 
+    public function updateCartItemQuantity(Request $request)
+    {
+        $itemId = $request->input('item_id');
+        $quantity = $request->input('quantity');
+
+        // Kiểm tra nếu sản phẩm và số lượng hợp lệ
+        if ($quantity < 1) {
+            return response()->json(['status' => 'error', 'message' => 'Số lượng phải lớn hơn 0']);
+        }
+
+        // Giả sử giỏ hàng được lưu trữ trong session, bạn có thể cập nhật số lượng trong session
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$itemId])) {
+            $cart[$itemId]['quantity'] = $quantity;
+            session()->put('cart', $cart);
+
+            return response()->json([
+                'status' => 'success',
+                'cartHtml' => view('admin.pos.cart')->render(),
+                'cart' => $cart,
+            ]);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Sản phẩm không tồn tại trong giỏ hàng']);
+    }
 }

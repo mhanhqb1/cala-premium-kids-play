@@ -55,11 +55,8 @@
         <div class="col-md-4">
             <h2>Giỏ hàng</h2>
             <div id="cart">
-
-                    <!-- Hiển thị giỏ hàng với các sản phẩm đã chọn -->
-                    @include('admin.pos.cart')
-                    </tbody>
-                </table>
+                <!-- Hiển thị giỏ hàng với các sản phẩm đã chọn -->
+                @include('admin.pos.cart')
             </div>
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -166,6 +163,13 @@ $(document).ready(function() {
 
     loadOnHoldOrders();
     updateTotals();
+
+    $('#cart').on('change', '.item-quantity', function() {
+        var itemId = $(this).data('id');
+        var newQuantity = $(this).val();
+
+        updateCartItemQuantity(itemId, newQuantity);
+    });
 
     $('#onHoldOrdersButton').on('click', function(){
         $('#onHoldOrdersModal').modal();
@@ -423,6 +427,38 @@ $(document).ready(function() {
             },
             error: function() {
                 alert('Không thể tải danh sách đơn hàng tạm giữ.');
+            }
+        });
+    }
+
+    function updateCartItemQuantity(itemId, quantity) {
+        $.ajax({
+            url: '/admin/pos/cart/update-quantity',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                item_id: itemId,
+                quantity: quantity
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#cart').html(response.cartHtml);
+                    cart = [];
+                    for (const productId in response.cart) {
+                        const item = response.cart[productId]
+                        cart.push({
+                            id: productId,
+                            price: item.price,
+                            quantity: item.quantity,
+                        });
+                        updateTotals();
+                    }
+                } else {
+                    alert('Không thể cập nhật số lượng sản phẩm.');
+                }
+            },
+            error: function() {
+                alert('Đã có lỗi xảy ra.');
             }
         });
     }
