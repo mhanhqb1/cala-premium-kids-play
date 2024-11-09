@@ -175,7 +175,7 @@ class PosController extends Controller
         foreach ($onHoldOrders as $order) {
             $data[] = [
                 'id' => $order->id,
-                'created_at' => date('Y-m-d', strtotime($order->created_at)),
+                'created_at' => date('Y-m-d H:i', strtotime($order->created_at)),
                 'resume_url' => route('admin.pos.resumeOrder', $order),
             ];
         }
