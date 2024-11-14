@@ -117,6 +117,15 @@ class PosController extends Controller
         $order->payment_method = $paymentMethod;
         $order->save();
 
+        foreach ($cart as $productId => $details) {
+            $order->items()->create([
+                'product_id' => $productId,
+                'quantity' => $details['quantity'],
+                'unit_price' => $details['price'],
+                'total_price' => $details['price'] * $details['quantity'],
+            ]);
+        }
+
         session()->forget('cart'); // Xóa giỏ hàng sau khi thanh toán
 
         return response()->json(['success' => true]);

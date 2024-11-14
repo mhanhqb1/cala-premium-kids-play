@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
@@ -42,19 +43,26 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Route xóa hình ảnh
     Route::delete('products/images/{image}', [ProductImageController::class, 'destroy'])->name('products.images.destroy');
 
-    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
-    Route::post('/pos/add-to-cart', [PosController::class, 'addToCart'])->name('pos.addToCart');
-    Route::post('/pos/remove-from-cart', [PosController::class, 'removeFromCart'])->name('pos.removeFromCart');
-    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
-    Route::post('/pos/hold-order', [PosController::class, 'holdOrder'])->name('pos.holdOrder');
-    Route::get('/pos/hold-orders', [PosController::class, 'showHoldOrders'])->name('pos.holdOrders');
-    Route::get('/pos/resume-order/{order}', [PosController::class, 'resumeOrder'])->name('pos.resumeOrder');
-    Route::get('/pos/search-products', [PosController::class, 'searchProducts'])->name('pos.searchProducts');
-    Route::post('/pos/create-customer', [PosController::class, 'createCustomer'])->name('pos.createCustomer');
-    Route::get('/pos/orders/on-hold', [PosController::class, 'getOnHoldOrders'])->name('pos.orders.onHold');
-    Route::post('/pos/orders/delete-on-hold', [PosController::class, 'deleteOnHoldOrder'])->name('pos.orders.deleteOnHold');
-    Route::get('/pos/user/{id}', [PosController::class, 'getUserInfo'])->name('pos.user.info');
-    Route::post('/pos/cart/update-quantity', [PosController::class, 'updateCartItemQuantity'])->name('pos.cart.updateQuantity');
+    Route::prefix('pos')->name('pos.')->group(function () {
+        Route::get('/', [PosController::class, 'index'])->name('index');
+        Route::post('/add-to-cart', [PosController::class, 'addToCart'])->name('addToCart');
+        Route::post('/remove-from-cart', [PosController::class, 'removeFromCart'])->name('removeFromCart');
+        Route::post('/checkout', [PosController::class, 'checkout'])->name('checkout');
+        Route::post('/hold-order', [PosController::class, 'holdOrder'])->name('holdOrder');
+        Route::get('/hold-orders', [PosController::class, 'showHoldOrders'])->name('holdOrders');
+        Route::get('/resume-order/{order}', [PosController::class, 'resumeOrder'])->name('resumeOrder');
+        Route::get('/search-products', [PosController::class, 'searchProducts'])->name('searchProducts');
+        Route::post('/create-customer', [PosController::class, 'createCustomer'])->name('createCustomer');
+        Route::get('/orders/on-hold', [PosController::class, 'getOnHoldOrders'])->name('orders.onHold');
+        Route::post('/orders/delete-on-hold', [PosController::class, 'deleteOnHoldOrder'])->name('orders.deleteOnHold');
+        Route::get('/user/{id}', [PosController::class, 'getUserInfo'])->name('user.info');
+        Route::post('/cart/update-quantity', [PosController::class, 'updateCartItemQuantity'])->name('cart.updateQuantity');
+    });
+
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+    });
 });
 
 require __DIR__.'/auth.php';

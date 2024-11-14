@@ -66,6 +66,13 @@
                                 <p>Quản lý sản phẩm</p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('admin.orders.index') }}" class="nav-link {{ Request::is('admin/orders*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-shopping-cart"></i>
+                                <p>Quản Lý Đơn Hàng</p>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>
