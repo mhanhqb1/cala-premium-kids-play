@@ -73,6 +73,13 @@
                                 <p>Quản Lý Đơn Hàng</p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reports.revenue') }}" class="nav-link {{ Request::is('admin/reports/revenue*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-shopping-cart"></i>
+                                <p>Báo cáo doanh thu</p>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>
