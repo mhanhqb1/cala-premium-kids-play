@@ -81,6 +81,14 @@
                         <input type="text" id="total" class="form-control" readonly>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="payment_method">Phương thức thanh toán:</label>
+                    <select name="payment_method" id="payment_method" class="form-control">
+                        @foreach($paymentMethods as $paymentMethod => $paymentMethodTitle)
+                        <option value="{{ $paymentMethod }}">{{ $paymentMethodTitle }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="mt-3">
                 <button class="btn btn-warning" id="hold-order">Tạm giữ đơn hàng</button>
@@ -315,6 +323,7 @@ $(document).ready(function() {
             user_id: $('#customerSelect').val(),
             discount: parseFloat($('#discount').val()) || 0,
             max_discount: parseFloat($('#max_discount').val()) || 0,
+            payment_method: $('#payment_method').val(),
         };
         $.post("{{ route('admin.pos.checkout') }}", params, function(data) {
             if (data.success) {

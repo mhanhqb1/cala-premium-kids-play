@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
@@ -20,7 +21,14 @@ class PosController extends Controller
         $categories = Category::all();
         $users = User::where('role', UserRole::USER)->get();
         $guest = User::where('role', UserRole::GUEST)->first();
-        return view('admin.pos.index', compact('products', 'categories', 'users', 'guest'));
+        $paymentMethods = PaymentMethod::all();
+        return view('admin.pos.index', compact(
+            'products',
+            'categories',
+            'users',
+            'guest',
+            'paymentMethods'
+        ));
     }
 
     public function searchProducts(Request $request)
@@ -83,6 +91,7 @@ class PosController extends Controller
         $userId = $request->get('user_id');
         $discount = $request->get('discount', 0);
         $maxDiscount = $request->get('max_discount', 0);
+        $paymentMethod = $request->get('payment_method', PaymentMethod::CASH);
         // Tạo đơn hàng và lưu vào database
         $cart = session()->get('cart');
 
@@ -105,6 +114,7 @@ class PosController extends Controller
         $order->discount_amount = $discountAmount;
         $order->max_discount = $maxDiscount;
         $order->total_amount = $subTotal - $discountAmount;
+        $order->payment_method = $paymentMethod;
         $order->save();
 
         session()->forget('cart'); // Xóa giỏ hàng sau khi thanh toán
