@@ -70,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'asia/ho_chi_minh',
 
     /*
     |--------------------------------------------------------------------------
@@ -184,5 +184,7 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+
+    'default_pass' => env('DEFAULT_PASS', '12345678'),
 
 ];

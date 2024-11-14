@@ -1,0 +1,482 @@
+@extends('layouts.admin')
+
+@section('content')
+<div class="pos-menu">
+    <button id="onHoldOrdersButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#onHoldOrdersModal">
+        Đơn hàng tạm giữ (<span id="onHoldOrderCount">0</span>)
+    </button>
+</div>
+<div class="container-fluid">
+    <h1>POS - Bán Hàng</h1>
+
+    @if(session('message'))
+        <div class="alert alert-success">{{ session('message') }}</div>
+    @endif
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Form tìm kiếm và lọc sản phẩm -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <input type="text" id="searchProduct" class="form-control" placeholder="Tìm kiếm sản phẩm">
+                </div>
+                <div class="col-md-4">
+                    <select id="customerSelect" class="form-control select2">
+                        <option value="{{ $guest->id }}">Khách vãng lai</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}-{{ $user->phone }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button id="createCustomerBtn" class="btn btn-primary" data-toggle="modal" data-target="#createCustomerModal">
+                        Tạo mới khách hàng
+                    </button>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col">
+                    <button class="btn btn-primary category-button" data-category-id="">Tất cả</button>
+                    @foreach($categories as $category)
+                        <button class="btn btn-secondary category-button" data-category-id="{{ $category->id }}">
+                            {{ $category->name }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div id="productList" class="row">
+                @include('admin.pos.partials.product_list', ['products' => $products])
+            </div>
+        </div>
+
+        <!-- Giỏ hàng -->
+        <div class="col-md-4">
+            <h2>Giỏ hàng</h2>
+            <div id="cart">
+                <!-- Hiển thị giỏ hàng với các sản phẩm đã chọn -->
+                @include('admin.pos.cart')
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="subTotal">Tổng phụ:</label>
+                        <input type="text" id="subTotal" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="discount">Giảm giá (%):</label>
+                        <input type="number" id="discount" class="form-control" value="0" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_discount">Giảm giá tối đa:</label>
+                        <input type="number" id="max_discount" class="form-control" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="discountAmount">Giảm giá áp dụng:</label>
+                        <input type="text" id="discountAmount" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="total">Tổng cộng:</label>
+                        <input type="text" id="total" class="form-control" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="payment_method">Phương thức thanh toán:</label>
+                    <select name="payment_method" id="payment_method" class="form-control">
+                        @foreach($paymentMethods as $paymentMethod => $paymentMethodTitle)
+                        <option value="{{ $paymentMethod }}">{{ $paymentMethodTitle }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-warning" id="hold-order">Tạm giữ đơn hàng</button>
+                <button class="btn btn-success" id="checkout">Thanh toán</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="onHoldOrdersModal" tabindex="-1" aria-labelledby="onHoldOrdersModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="onHoldOrdersModalLabel">Danh sách đơn hàng tạm giữ</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul id="onHoldOrderList" class="list-group">
+                        <!-- Các đơn hàng tạm giữ sẽ được hiển thị ở đây -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal tạo mới khách hàng -->
+    <div class="modal fade" id="createCustomerModal" tabindex="-1" role="dialog" aria-labelledby="createCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createCustomerModalLabel">Tạo Mới Khách Hàng</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createCustomerForm">
+                        @csrf
+                        <div class="form-group">
+                            <label for="customerName">Tên khách hàng</label>
+                            <input type="text" id="customerName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerPhone">Số điện thoại</label>
+                            <input type="text" id="customerPhone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customerEmail">Email</label>
+                            <input type="email" id="customerEmail" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-success">Tạo khách hàng</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    let categoryId = '';
+    let customerId = '{{ $guest->id }}';
+    let cart = [];
+
+    @if(session('cart'))
+        @foreach(session('cart') as $id => $item)
+        cart.push({
+            id: {{$id}},
+            price: {{$item['price']}},
+            quantity: {{$item['quantity']}}
+        });
+        @endforeach
+    @endif
+
+    loadOnHoldOrders();
+    updateTotals();
+
+    $('#cart').on('change', '.item-quantity', function() {
+        var itemId = $(this).data('id');
+        var newQuantity = $(this).val();
+
+        updateCartItemQuantity(itemId, newQuantity);
+    });
+
+    $('#onHoldOrdersButton').on('click', function(){
+        $('#onHoldOrdersModal').modal();
+    })
+
+    $('#searchButton').on('click', function() {
+        fetchFilteredProducts();
+    });
+
+    $('#customerSelect').on('change', function() {
+        customerId = $(this).val();
+        if (customerId) {
+            $.ajax({
+                url: '/admin/pos/user/' + customerId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#discount').val(response.data.discount);
+                        $('#max_discount').val(response.data.max_discount);
+                        updateTotals();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('Không thể lấy thông tin khách hàng.');
+                }
+            });
+        } else {
+            $('#discount').val(0); // Nếu không có user nào được chọn, đặt discount về 0
+            updateTotals();
+        }
+    });
+
+    $('#searchProduct').on('input', function() {
+        fetchFilteredProducts();
+    });
+
+    $('.category-button').on('click', function() {
+        // Xóa active từ các nút khác và thêm vào nút được chọn
+        $('.category-button').removeClass('btn-primary').addClass('btn-secondary');
+        $(this).removeClass('btn-secondary').addClass('btn-primary');
+
+        // Lấy ID của danh mục từ nút được chọn
+        categoryId = $(this).data('category-id');
+        fetchFilteredProducts();
+    });
+
+    // Mở modal khi nhấn nút "Tạo mới khách hàng"
+    $('#createCustomerBtn').on('click', function() {
+        $('#createCustomerModal').modal('show');
+    });
+
+    // Xử lý submit form tạo khách hàng mới
+    $('#createCustomerForm').on('submit', function(e) {
+        e.preventDefault();
+
+        let name = $('#customerName').val();
+        let phone = $('#customerPhone').val();
+        let email = $('#customerEmail').val();
+
+        $.ajax({
+            url: "{{ route('admin.pos.createCustomer') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                name: name,
+                phone: phone,
+                email: email
+            },
+            success: function(response) {
+                // Đóng modal và reset form
+                $('#createCustomerModal').modal('hide');
+                $('#createCustomerForm')[0].reset();
+
+                // Thêm khách hàng mới vào dropdown
+                $('#customerSelect').append(`<option value="${response.customer.id}">${response.customer.name} - ${response.customer.phone}</option>`);
+
+                // Chọn khách hàng mới tạo
+                $('#customerSelect').val(response.customer.id);
+            },
+            error: function() {
+                alert('Đã xảy ra lỗi, vui lòng thử lại!');
+            }
+        });
+    });
+
+    function fetchFilteredProducts() {
+        let search = $('#searchProduct').val();
+
+        $.ajax({
+            url: "{{ route('admin.pos.searchProducts') }}",
+            type: "GET",
+            data: {
+                search: search,
+                category: categoryId
+            },
+            success: function(data) {
+                $('#productList').html(data.html); // Cập nhật danh sách sản phẩm
+            },
+            error: function() {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    }
+
+    // Thêm sản phẩm vào giỏ hàng
+    $('.add-to-cart').on('click', function() {
+        let productId = $(this).data('id');
+        let productPrice = $(this).data('price');
+        $.post("{{ route('admin.pos.addToCart') }}", { id: productId, _token: "{{ csrf_token() }}" }, function(data) {
+            $('#cart').html(data.cartHtml);
+        });
+        let product = cart.find(item => item.id === productId);
+        if (product) {
+            // Nếu có rồi thì tăng số lượng
+            product.quantity += 1;
+        } else {
+            // Nếu chưa thì thêm sản phẩm mới
+            cart.push({
+                id: productId,
+                price: productPrice,
+                quantity: 1
+            });
+        }
+        updateTotals();
+    });
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    $('#cart').on('click', '.remove-from-cart', function() {
+        let productId = $(this).data('id');
+        $.post("{{ route('admin.pos.removeFromCart') }}", { id: productId, _token: "{{ csrf_token() }}" }, function(data) {
+            $('#cart').html(data.cartHtml);
+        });
+        cart = cart.filter(item => item.id !== productId);
+        updateTotals();
+    });
+
+    // Thanh toán
+    $('#checkout').on('click', function() {
+        let params = {
+            _token: "{{ csrf_token() }}",
+            user_id: $('#customerSelect').val(),
+            discount: parseFloat($('#discount').val()) || 0,
+            max_discount: parseFloat($('#max_discount').val()) || 0,
+            payment_method: $('#payment_method').val(),
+        };
+        $.post("{{ route('admin.pos.checkout') }}", params, function(data) {
+            if (data.success) {
+                alert('Thanh toán thành công!');
+                $('#cart').html(''); // Xóa giỏ hàng sau khi thanh toán
+                window.location.reload();
+            } else {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+
+    $('#hold-order').on('click', function() {
+        $.post("{{ route('admin.pos.holdOrder') }}?user_id="+customerId, { _token: "{{ csrf_token() }}" }, function(data) {
+            if (data.success) {
+                alert(data.message);
+                $('#cart').html(''); // Xóa giỏ hàng sau khi tạm giữ
+                window.location.reload();
+            } else {
+                alert('Có lỗi xảy ra, vui lòng thử lại.');
+            }
+        });
+    });
+
+    $('#discount').on('input', function() {
+        updateTotals();
+    });
+
+    // Cập nhật tổng phụ và tổng cộng
+    function updateTotals() {
+        let subTotal = 0;
+
+        // Tính tổng phụ dựa trên các sản phẩm trong giỏ hàng
+        cart.forEach(item => {
+            subTotal += item.price * item.quantity;
+        });
+
+        // Hiển thị tổng phụ
+        $('#subTotal').val(subTotal.toLocaleString() + ' VND');
+
+        // Áp dụng giảm giá
+        let discount = parseFloat($('#discount').val()) || 0;
+        var maxDiscount = parseFloat($('#max_discount').val()) || 0;
+
+        // Tính mức giảm giá
+        var discountAmount = (subTotal * discount) / 100;
+
+        // Áp dụng giới hạn giảm giá tối đa
+        if (discountAmount > maxDiscount) {
+            discountAmount = maxDiscount;
+        }
+
+        $('#discountAmount').val(discountAmount.toLocaleString() + ' đ');
+
+        let total = subTotal - discountAmount;
+
+        // Hiển thị tổng cộng
+        $('#total').val(total.toLocaleString() + ' VND');
+    }
+
+    function deleteOnHoldOrder(orderId) {
+        if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) return;
+
+        $.ajax({
+            url: '{{ route("admin.pos.orders.deleteOnHold") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                order_id: orderId
+            },
+            success: function() {
+                loadOnHoldOrders(); // Tải lại danh sách đơn hàng tạm giữ
+            },
+            error: function() {
+                alert('Không thể xóa đơn hàng khỏi danh sách tạm giữ.');
+            }
+        });
+    }
+
+    function loadOnHoldOrders() {
+        $.ajax({
+            url: '{{ route("admin.pos.orders.onHold") }}',
+            method: 'GET',
+            success: function(orders) {
+                $('#onHoldOrderList').empty();
+                $('#onHoldOrderCount').text(orders.length); // Cập nhật số lượng đơn hàng
+
+                orders.forEach(order => {
+                    $('#onHoldOrderList').append(`
+                        <li class="list-group-item">
+                            <a href="${order.resume_url}">Đơn hàng #${order.id} - ${order.created_at}</a>
+                            <span class="btn btn-danger btn-sm deleteOnHoldOrder" data-id="${order.id}">
+                                Xóa
+                            </span>
+                        </li>
+                    `);
+                    $('.deleteOnHoldOrder').on('click', function() {
+                        if (!confirm('Bạn có chắc muốn xóa đơn hàng này?')) return;
+                        const orderId = $(this).attr('data-id');
+                        $.ajax({
+                            url: '{{ route("admin.pos.orders.deleteOnHold") }}',
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                order_id: orderId
+                            },
+                            success: function() {
+                                loadOnHoldOrders(); // Tải lại danh sách đơn hàng tạm giữ
+                            },
+                            error: function() {
+                                alert('Không thể xóa đơn hàng khỏi danh sách tạm giữ.');
+                            }
+                        });
+                    });
+                });
+            },
+            error: function() {
+                alert('Không thể tải danh sách đơn hàng tạm giữ.');
+            }
+        });
+    }
+
+    function updateCartItemQuantity(itemId, quantity) {
+        $.ajax({
+            url: '/admin/pos/cart/update-quantity',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                item_id: itemId,
+                quantity: quantity
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#cart').html(response.cartHtml);
+                    cart = [];
+                    for (const productId in response.cart) {
+                        const item = response.cart[productId]
+                        cart.push({
+                            id: productId,
+                            price: item.price,
+                            quantity: item.quantity,
+                        });
+                        updateTotals();
+                    }
+                } else {
+                    alert('Không thể cập nhật số lượng sản phẩm.');
+                }
+            },
+            error: function() {
+                alert('Đã có lỗi xảy ra.');
+            }
+        });
+    }
+});
+</script>
+@endPush

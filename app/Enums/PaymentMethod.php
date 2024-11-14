@@ -14,4 +14,12 @@ enum PaymentMethod: int
             self::BANK_TRANSFER => 'Bank Transfer',
         };
     }
+
+    public static function all()
+    {
+        return [
+            0 => 'Cash',
+            1 => 'Bank Transfer',
+        ];
+    }
 }
