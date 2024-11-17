@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
     });
+
+    Route::resource('users', UserController::class);
 });
 
 require __DIR__.'/auth.php';
