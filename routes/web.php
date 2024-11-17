@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
@@ -71,6 +72,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     });
 
     Route::resource('users', UserController::class);
+
+    Route::prefix('roles')->name('roles.')->group(function () {
+        Route::get('/', [RolePermissionController::class, 'index'])->name('index');
+        Route::get('/create', [RolePermissionController::class, 'create'])->name('create');
+        Route::post('/', [RolePermissionController::class, 'store'])->name('store');
+        Route::get('/{role}/edit', [RolePermissionController::class, 'edit'])->name('edit');
+        Route::put('/{role}', [RolePermissionController::class, 'update'])->name('update');
+        Route::delete('/{role}', [RolePermissionController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/auth.php';
