@@ -26,6 +26,8 @@ class User extends Authenticatable
         'password',
         'discount',
         'max_discount',
+        'loyalty_points',
+        'vip_exp',
     ];
 
     /**
