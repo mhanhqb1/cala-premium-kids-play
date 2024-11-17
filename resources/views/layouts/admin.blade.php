@@ -18,6 +18,11 @@
                 <li class="nav-item">
                     <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.pos.index') }}" class="nav-link {{ Request::is('admin/pos*') ? 'active' : '' }}">
+                        POS
+                    </a>
+                </li>
             </ul>
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
@@ -71,6 +76,13 @@
                             <a href="{{ route('admin.orders.index') }}" class="nav-link {{ Request::is('admin/orders*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-shopping-cart"></i>
                                 <p>Quản Lý Đơn Hàng</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('admin.reports.revenue') }}" class="nav-link {{ Request::is('admin/reports/revenue*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-shopping-cart"></i>
+                                <p>Báo cáo doanh thu</p>
                             </a>
                         </li>
                     </ul>
